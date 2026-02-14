@@ -1,54 +1,78 @@
-/*
-Raylib example file.
-This is an example main file for a simple raylib project.
-Use this as a starting point or replace it with your code.
-
-by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit https://creativecommons.org/publicdomain/zero/1.0/
-
-*/
-
 #include "raylib.h"
 
-#include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+// Định nghĩa macro tính toán
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-int main ()
+int main(void)
 {
-	// Tell the window to use vsync and work on high DPI displays
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+	// Cấu hình cửa sổ
+	// FLAG_WINDOW_RESIZABLE: Cho phép kéo giãn cửa sổ
+	// FLAG_VSYNC_HINT: Giới hạn FPS theo tần số quét màn hình (mượt hơn)
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+	InitWindow(1280, 720, "Raylib Pure C - Auto Scaling");
 
-	// Create the window and OpenGL context
-	InitWindow(1280, 800, "Hello Raylib");
+	// Độ phân giải nội bộ cố định (Virtual Resolution)
+	const int virtualResWidth = 1920;
+	const int virtualResHeight = 1080;
 
-	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
-	SearchAndSetResourceDir("resources");
+	// Tạo Render Texture - Đây là cái "khung tranh ảo"
+	RenderTexture2D target = LoadRenderTexture(virtualResWidth, virtualResHeight);
 
-	// Load a texture from the resources directory
-	Texture wabbit = LoadTexture("wabbit_alpha.png");
-	
-	// game loop
-	while (!WindowShouldClose())		// run the loop until the user presses ESCAPE or presses the Close button on the window
+	// Đặt bộ lọc Bilinear để khi phóng to hình ảnh không bị quá vỡ (pixelated)
+	SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+
+	// Bật chế độ Fullscreen ngay khi khởi động
+	if (!IsWindowFullscreen())
 	{
-		// drawing
+		// ToggleFullscreen();
+	}
+
+	// SetTargetFPS(60); // Có thể dùng nếu không muốn dùng VSYNC
+
+	while (!WindowShouldClose())
+	{
+		// Tính toán Tỷ lệ (Scale) dựa trên kích thước cửa sổ hiện tại
+		float windowWidth = (float)GetScreenWidth();
+		float windowHeight = (float)GetScreenHeight();
+
+		// Tìm tỷ lệ nhỏ nhất để game luôn nằm trọn trong màn hình
+		float scale = MIN(windowWidth / (float)virtualResWidth, windowHeight / (float)virtualResHeight);
+
+		// VẼ NỘI DUNG GAME (Vẽ vào Texture)
+		BeginTextureMode(target);
+		ClearBackground(RAYWHITE); // Xóa nền của canvas ảo
+
+		// Vẽ mọi thứ theo tọa độ 1920x1080
+		DrawText("Day la do phan giai 1920x1080", 100, 100, 40, DARKGRAY);
+		DrawRectangle(200, 200, 400, 400, RED);
+		DrawCircle(virtualResWidth / 2, virtualResHeight / 2, 100, BLUE);
+		EndTextureMode();
+
+		// VẼ CANVAS LÊN MÀN HÌNH (Scale và căn giữa)
 		BeginDrawing();
+		ClearBackground(BLACK); // Nền đen cho các khoảng trống (Letterbox)
 
-		// Setup the back buffer for drawing (clear color and depth buffers)
-		ClearBackground(BLACK);
+		// Vẽ Texture lên màn hình thực tế
+		// Lưu ý: sourceRec có height âm (-target.texture.height) vì texture trong OpenGL bị ngược y
+		Rectangle sourceRec = {0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height};
 
-		// draw some text using the default font
-		DrawText("Hello Raylib", 200,200,20,WHITE);
+		// Tính toán vị trí để canvas ảo luôn nằm giữa màn hình thực
+		Rectangle destRec = {
+			(windowWidth - ((float)virtualResWidth * scale)) * 0.5f,
+			(windowHeight - ((float)virtualResHeight * scale)) * 0.5f,
+			(float)virtualResWidth * scale,
+			(float)virtualResHeight * scale};
 
-		// draw our texture to the screen
-		DrawTexture(wabbit, 400, 200, WHITE);
-		
-		// end the frame and get ready for the next one  (display frame, poll input, etc...)
+		Vector2 origin = {0.0f, 0.0f};
+		DrawTexturePro(target.texture, sourceRec, destRec, origin, 0.0f, WHITE);
+
+		DrawFPS(10, 10);
 		EndDrawing();
 	}
 
-	// cleanup
-	// unload our texture so it can be cleaned up
-	UnloadTexture(wabbit);
-
-	// destroy the window and cleanup the OpenGL context
+	// Giải phóng bộ nhớ
+	UnloadRenderTexture(target);
 	CloseWindow();
+
 	return 0;
 }
