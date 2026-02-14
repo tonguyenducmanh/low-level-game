@@ -19,7 +19,7 @@ int main(void)
 	RenderTexture2D target = LoadRenderTexture(virtualResWidth, virtualResHeight);
 
 	// Đặt bộ lọc Bilinear để khi phóng to hình ảnh không bị quá vỡ (pixelated)
-	SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+	// SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 
 	// Bật chế độ Fullscreen ngay khi khởi động
 	if (!IsWindowFullscreen())
