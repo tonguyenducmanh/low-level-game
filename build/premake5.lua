@@ -192,7 +192,9 @@ if (downloadRaylib) then
         {
             ["Header Files/*"] = { "../include/**.h",  "../include/**.hpp", "../src/**.h", "../src/**.hpp"},
             ["Source Files/*"] = {"../src/**.c", "src/**.cpp"},
-            ["Windows Resource Files/*"] = {"../src/**.rc", "../src/**.ico"},
+            -- mặc định sẽ để ở src, chuyển vào resource cho dễ quản lý
+            -- ["Windows Resource Files/*"] = {"../src/**.rc", "../src/**.ico"},
+            ["Windows Resource Files/*"] = {"../resources/icon/**.rc", "../resources/icon/**.ico"},
             ["Game Resource Files/*"] = {"../resources/**"},
         }
         
